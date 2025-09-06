@@ -531,9 +531,12 @@ def notify_group_new_post(group_id, post, creator_name):
 # ----------------------------
 # Auto-suggestion
 # ----------------------------
-def check_purchase_history(user_id, item_name, threshold=0.5):
+# ----------------------------
+# Auto-suggestion (fixed)
+# ----------------------------
+def check_purchase_history(user_id, item_name, threshold=0.8):
     """
-    Check user's past posts (all posts) and suggest if similar item exists.
+    Check user's past posts and suggest if similar item exists.
     Uses difflib.get_close_matches first, then falls back to SequenceMatcher ratio.
     """
     conn = get_conn()
@@ -550,25 +553,19 @@ def check_purchase_history(user_id, item_name, threshold=0.5):
     if not past_items:
         return "✅ Suggestion: No past items found — this might be a new need."
 
-    # difflib quick match
-    try:
-        names = [p.lower() for p in past_items]
-        matches = difflib.get_close_matches(item_name.lower(), names, n=1, cutoff=threshold)
-        if matches:
-            matched = matches[0]
-            orig = next((p for p in past_items if p.lower() == matched), matched)
-            return f"⚠️ Suggestion: You already posted something similar earlier: '{orig}'. Consider skipping."
-    except Exception:
-        pass
+    # difflib quick match (strong match only)
+    names = [p.lower() for p in past_items]
+    matches = difflib.get_close_matches(item_name.lower(), names, n=1, cutoff=threshold)
+    if matches:
+        matched = matches[0]
+        orig = next((p for p in past_items if p.lower() == matched), matched)
+        return f"⚠️ Suggestion: You already posted something very similar earlier: '{orig}'. Consider skipping."
 
     # fallback SequenceMatcher
     for past in past_items:
-        try:
-            ratio = SequenceMatcher(None, past.lower(), item_name.lower()).ratio()
-            if ratio >= threshold:
-                return f"⚠️ Suggestion: You already posted something similar earlier: '{past}'. Consider skipping."
-        except Exception:
-            continue
+        ratio = SequenceMatcher(None, past.lower(), item_name.lower()).ratio()
+        if ratio >= threshold:
+            return f"⚠️ Suggestion: You already posted something very similar earlier: '{past}'. Consider skipping."
 
     return "✅ Suggestion: No close match in your past posts — you might need this."
 
@@ -807,9 +804,10 @@ if st.session_state.user:
                     except Exception:
                         suggestion = "✅ Suggestion: Unable to check history right now."
 
+                # Show suggestion & optionally offer auto-skip checkbox if suggestion warns
+                if suggestion:
                     if suggestion.startswith("⚠️"):
                         st.warning(suggestion)
-                        # unique checkbox key using group id to avoid interference
                         st.session_state.post_auto_skip = st.checkbox(
                             "I already have this / Mark as skipped and record saving",
                             value=False,
@@ -819,6 +817,7 @@ if st.session_state.user:
                             st.caption("Submitting will mark the post as SKIPPED and add the price to your saved total.")
                     else:
                         st.success(suggestion)
+                        # ensure checkbox cleared when suggestion is positive
                         st.session_state.post_auto_skip = False
 
                 submit_post = st.form_submit_button("Post to group")
