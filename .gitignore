@@ -1,0 +1,6 @@
+# local secrets
+.streamlit/secrets.toml
+
+# local DB and uploads
+spendsense.db
+uploads/
