@@ -531,7 +531,7 @@ def notify_group_new_post(group_id, post, creator_name):
 # ----------------------------
 # Auto-suggestion
 # ----------------------------
-def check_purchase_history(user_id, item_name, threshold=0.6):
+def check_purchase_history(user_id, item_name, threshold=0.5):
     """
     Check user's past posts (all posts) and suggest if similar item exists.
     Uses difflib.get_close_matches first, then falls back to SequenceMatcher ratio.
@@ -957,4 +957,3 @@ if st.session_state.user:
     # footer
     st.markdown("---")
     st.caption("SpendSense: a social accountability app to reduce impulsive buys. Not an expense tracker. Built with Streamlit + SQLite.")
-
