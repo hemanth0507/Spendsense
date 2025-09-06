@@ -212,9 +212,9 @@ def send_email(recipients, subject, body):
     [smtp]
     host = "smtp.gmail.com"
     port = 587
-    user = "you@example.com"
-    password = "app_password"
-    from_email = "SpendSense <you@example.com>"
+    user = "bdhanajeyahemanth@gmail.com"
+    password = "zuzd sfan sdjw caqa"
+    from_email = "SpendSense <bdhanajeyahemanth@gmail.com>"
     """
     try:
         cfg = st.secrets["smtp"]
@@ -957,3 +957,4 @@ if st.session_state.user:
     # footer
     st.markdown("---")
     st.caption("SpendSense: a social accountability app to reduce impulsive buys. Not an expense tracker. Built with Streamlit + SQLite.")
+
