@@ -534,40 +534,41 @@ def notify_group_new_post(group_id, post, creator_name):
 # ----------------------------
 # Auto-suggestion (fixed)
 # ----------------------------
-def check_purchase_history(user_id, item_name, threshold=0.8):
+from difflib import get_close_matches, SequenceMatcher
+
+def check_purchase_history(user_id, item_name, threshold=0.7):
     """
-    Check user's past posts and suggest if similar item exists.
-    Uses difflib.get_close_matches first, then falls back to SequenceMatcher ratio.
+    Check if the user has bought similar items before.
+    Uses both get_close_matches and SequenceMatcher for similarity detection.
     """
     conn = get_conn()
     cur = conn.cursor()
-    try:
-        cur.execute("SELECT item_name FROM posts WHERE user_id=?", (user_id,))
-        rows = cur.fetchall()
-    except Exception:
-        rows = []
+    cur.execute("SELECT item_name FROM posts WHERE user_id=? AND decision='bought'", (user_id,))
+    rows = cur.fetchall()
     conn.close()
 
-    past_items = [(r[0] or "") for r in rows]
-
+    past_items = [r[0].strip() for r in rows if r[0] and r[0].strip()]
     if not past_items:
-        return "✅ Suggestion: No past items found — this might be a new need."
+        return "✅ No bought history found — this might be a new need."
 
-    # difflib quick match (strong match only)
-    names = [p.lower() for p in past_items]
-    matches = difflib.get_close_matches(item_name.lower(), names, n=1, cutoff=threshold)
+    # Normalize case and spaces for comparison
+    item_name_norm = item_name.lower().strip()
+    past_items_norm = [p.lower().strip() for p in past_items]
+
+    # Try get_close_matches first
+    matches = get_close_matches(item_name_norm, past_items_norm, n=1, cutoff=threshold)
     if matches:
         matched = matches[0]
-        orig = next((p for p in past_items if p.lower() == matched), matched)
-        return f"⚠️ Suggestion: You already posted something very similar earlier: '{orig}'. Consider skipping."
+        original = next((p for p in past_items if p.lower().strip() == matched), matched)
+        return f"⚠️ Suggestion: You already bought something similar earlier: '{original}'. Consider skipping."
 
-    # fallback SequenceMatcher
-    for past in past_items:
-        ratio = SequenceMatcher(None, past.lower(), item_name.lower()).ratio()
+    # Fallback using SequenceMatcher
+    for past, norm_past in zip(past_items, past_items_norm):
+        ratio = SequenceMatcher(None, norm_past, item_name_norm).ratio()
         if ratio >= threshold:
-            return f"⚠️ Suggestion: You already posted something very similar earlier: '{past}'. Consider skipping."
+            return f"⚠️ Suggestion: You already bought something similar earlier: '{past}'. Consider skipping."
 
-    return "✅ Suggestion: No close match in your past posts — you might need this."
+    return "✅ No bought history found — this might be a new need."
 
 # ----------------------------
 # Delete helpers
@@ -891,19 +892,20 @@ if st.session_state.user:
                         except Exception:
                             pass
 
-                        if p["status"] == "pending":
-                            if u["id"] != p["user_id"]:
-                                with st.form(f"vote_form_{p['id']}"):
-                                    vote = st.radio("Your vote", ["buy", "dont_buy", "neutral"], horizontal=True)
-                                    comment = st.text_input("Comment (optional)")
-                                    vbtn = st.form_submit_button("Submit vote")
+                    if p["status"] == "pending":
+                        if u["id"] != p["user_id"]:
+                            form_key = f"vote_form_{p['id']}_{u['id']}"  # Unique key for each user & post
+                            with st.form(form_key):
+                                vote = st.radio("Your vote", ["buy", "dont_buy", "neutral"], index=0, horizontal=True)
+                                comment = st.text_input("Comment (optional)", "")
+                                vbtn = st.form_submit_button("Submit vote")
                                 if vbtn:
                                     cast_vote(p["id"], u["id"], vote, comment)
                                     st.success("Vote recorded!")
-                                    st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
-                            else:
-                                # Poster can finalize anytime
+                                    # Refresh the post and UI after vote submission
+                                    st.experimental_rerun()
                                 st.info("You can finalize decision anytime.")
+    
                         elif p["status"] == "closed":
                             st.warning("Voting closed. Awaiting final decision from poster.")
                         elif p["status"] == "decided":
@@ -911,7 +913,7 @@ if st.session_state.user:
                                 st.success("Final decision: Skipped ✅ (Saved money)")
                             else:
                                 st.info("Final decision: Bought 🛍️")
-
+    
                         with st.expander("🗨️ See all feedback"):
                             if votes_list:
                                 for v in votes_list:
