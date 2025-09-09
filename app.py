@@ -685,7 +685,7 @@ if st.session_state.user is None:
                 st.session_state.user = get_user(uid)
                 ensure_savings_row(st.session_state.user["id"])
                 st.success("Account created & logged in!")
-                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
             else:
                 st.error("Email already registered.")
         else:
@@ -694,7 +694,7 @@ if st.session_state.user is None:
                 st.session_state.user = u
                 ensure_savings_row(u["id"])
                 st.success("Logged in!")
-                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
             else:
                 st.error("Invalid credentials.")
 
@@ -708,7 +708,7 @@ if st.session_state.user:
     if st.sidebar.button("Logout"):
         st.session_state.user = None
         st.session_state.active_gid = None
-        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+        st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
 
     # Sidebar: Groups
     st.sidebar.subheader("Your Groups")
@@ -731,7 +731,7 @@ if st.session_state.user:
             if gname.strip():
                 gid = create_group(u["id"], gname, short_code)
                 st.success("Group created!")
-                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
             else:
                 st.error("Enter a group name.")
 
@@ -746,7 +746,7 @@ if st.session_state.user:
                     st.error(err)
                 else:
                     st.success("Joined!")
-                    st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                    st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
 
     # Sidebar: Progress & badges
     st.sidebar.subheader("🏆 Your Progress")
@@ -763,7 +763,7 @@ if st.session_state.user:
             st.success("Your account and all data were deleted.")
             st.session_state.user = None
             st.session_state.active_gid = None
-            st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+            st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
 
     # Main content: group selected?
     if not st.session_state.active_gid:
@@ -783,7 +783,7 @@ if st.session_state.user:
                     if delete_group(active_gid, u["id"]):
                         st.success("Group deleted.")
                         st.session_state.active_gid = None
-                        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                        st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                     else:
                         st.error("Failed to delete group.")
 
@@ -838,15 +838,15 @@ if st.session_state.user:
                             notify_group_new_post(active_gid, p, u["name"])
                             st.success("Posted and recorded as SKIPPED — savings & badge updated.")
                             st.session_state.post_auto_skip = False
-                            st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                            st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                         else:
                             notify_group_new_post(active_gid, p, u["name"])
                             st.success("Posted! Group notified (if email configured).")
-                            st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                            st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                     except Exception as e:
                         notify_group_new_post(active_gid, p, u["name"])
                         st.error(f"Posted but failed to finalize skip automatically: {e}")
-                        st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                        st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
 
         st.markdown("---")
         st.subheader("Recent posts in this group")
@@ -903,7 +903,7 @@ if st.session_state.user:
                                     cast_vote(p["id"], u["id"], vote, comment)
                                     st.success("Vote recorded!")
                                     # Refresh the post and UI after vote submission
-                                    st.experimental_rerun()
+                                    st.rerun()
                                 st.info("You can finalize decision anytime.")
     
                         elif p["status"] == "closed":
@@ -930,17 +930,17 @@ if st.session_state.user:
                             dcol1, dcol2 = st.columns(2)
                             if dcol1.button("I bought it", key=f"buy_{p['id']}"):
                                 decide_post(p["id"], "bought")
-                                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                             if dcol2.button("I skipped it", key=f"skip_{p['id']}"):
                                 decide_post(p["id"], "skipped")
-                                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                             if st.button("🗑️ Delete Post", key=f"del_{p['id']}"):
                                 ok = delete_post(p["id"], u["id"])
                                 if ok:
                                     st.success("Post deleted.")
                                 else:
                                     st.error("Cannot delete this post (must be pending and your own).")
-                                st.experimental_rerun() if hasattr(st, "experimental_rerun") else st.rerun()
+                                st.rerun() if hasattr(st, "experimental_rerun") else st.rerun()
                         else:
                             # For non-poster users, optionally show a 'flag' or contact
                             pass
