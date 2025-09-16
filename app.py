@@ -673,10 +673,11 @@ auth_mode = st.sidebar.radio("Auth", ["Login", "Sign up"], horizontal=True)
 # ----------------------------
 if st.session_state.user is None:
     with st.sidebar.form("auth_form"):
-        email = st.text_input("Email")
+        email = st.text_input("Email", key="auth_email")
+
         if auth_mode == "Sign up":
-            name = st.text_input("Name")
-        password = st.text_input("Password", type="password")
+            name = st.text_input("Name",key="auth_name")
+        password = st.text_input("Password", type="password",key="auth_password")
         submitted = st.form_submit_button(auth_mode)
     if submitted:
         if auth_mode == "Sign up":
@@ -790,10 +791,10 @@ if st.session_state.user:
         # Post creation form
         with st.expander("📝 Post an item for advice"):
             with st.form("post_form"):
-                item_name = st.text_input("Item name", placeholder="Nike Air Max 270")
-                item_link = st.text_input("Link (optional)")
-                price = st.number_input("Price (₹)", min_value=0.0, step=100.0)
-                reason = st.text_area("Why do you want it?")
+                item_name = st.text_input("Item name", placeholder="Nike Air Max 270",key="post_item_name")
+                item_link = st.text_input("Link (optional)",key="post_item_link")
+                price = st.number_input("Price (₹)", min_value=0.0, step=100.0,key="post_price")
+                reason = st.text_area("Why do you want it?",key="post_reason")
                 image = st.file_uploader("Image (optional)", type=["jpg", "jpeg", "png"])
                 deadline_hours = st.slider("Voting window (hours)", 1, 168, 24)
 
@@ -897,7 +898,7 @@ if st.session_state.user:
                             form_key = f"vote_form_{p['id']}_{u['id']}"  # Unique key for each user & post
                             with st.form(form_key):
                                 vote = st.radio("Your vote", ["buy", "dont_buy", "neutral"], index=0, horizontal=True)
-                                comment = st.text_input("Comment (optional)", "")
+                                comment = st.text_input("Comment (optional)", "",key=f"comment_{p['id']}")
                                 vbtn = st.form_submit_button("Submit vote")
                                 if vbtn:
                                     cast_vote(p["id"], u["id"], vote, comment)
