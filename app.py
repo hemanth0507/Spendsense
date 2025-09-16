@@ -864,7 +864,7 @@ if st.session_state.user:
                     cols = st.columns([1.2, 3, 1.2])
                     with cols[0]:
                         if p.get("image_path") and os.path.exists(p["image_path"]):
-                            st.image(p["image_path"], use_column_width=True)
+                            st.image(p["image_path"], use_container_width=True)
                         st.caption(f"Posted: {to_local(p['created_at'])} IST")
                         poster = get_user(p['user_id'])
                         poster_name = poster['name'] if poster else "Unknown"
